@@ -194,7 +194,7 @@ class Message:
         return response_message
 
     def close(self):
-        print(f'Closing connection to {self._ipaddr}')
+        #print(f'Closing connection to {self._ipaddr}')
         try:
             self._selector.unregister(self._socket)
         except Exception as e:
