@@ -1,8 +1,10 @@
 import json
 import os
+import multiprocessing
 import selectors
 import socket
 import sys
+import time
 import traceback
 from datetime import datetime
 from typing import List
@@ -23,15 +25,41 @@ def main():
     """
     global LOGFILE
     rounds = sys.argv[1] if len(sys.argv) > 1 else 1
-    for _ in range(rounds):
-        try:
-            LOGFILE = datetime.now().strftime('%Y%m%d%H%M%S')
-            game_round()
-        except Exception as e:
-            pass
-        finally:
-            #input('Press Enter to continue...')
-            pass
+    total_rounds = 0
+    round_thread = None
+    round_start = None
+    
+    while total_rounds < int(rounds):
+        if round_thread is not None and round_start is not None:
+            if round_thread.is_alive():
+                if time.time() - round_start > 240:
+                    print(f'Round {total_rounds} is taking too long.')
+                    round_thread.terminate()
+                    round_thread.join()
+                    round_thread = None
+                    round_start = None
+                    total_rounds += 1
+                else:
+                    continue
+            else:
+                round_thread = None
+                round_start = None
+                total_rounds += 1
+        else:
+            try:
+                round_start = time.time()
+                LOGFILE = datetime.now().strftime('%Y%m%d%H%M%S')
+                
+                round_thread = multiprocessing.Process(target=game_round)
+                round_thread.daemon = True
+                round_thread.start()
+                round_thread.join(timeout=240)
+            except Exception as e:
+                print(f'Error occurred: {e}')
+                traceback.print_exc()
+            finally:
+                #input('Press Enter to continue...')
+                pass
     pass
 
 
