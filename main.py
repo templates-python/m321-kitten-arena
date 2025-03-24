@@ -16,7 +16,7 @@ from game.bot import Bot
 LOGFILE = datetime.now().strftime('%Y%m%d%H%M%S')
 CLOWDERHOST='127.0.0.1'
 CLOWDERPORT=65432
-LOGPATH='C:/BZZ/Python/m321/explodingKitten/logs'
+LOGPATH='C:\BZZ\Modul321\lernbeurteilung1\kitten-combo\logs'
 
 def main():
     """
@@ -37,29 +37,30 @@ def main():
                     round_thread.terminate()
                     round_thread.join()
                     round_thread = None
-                    round_start = None
                     total_rounds += 1
                 else:
                     continue
             else:
                 round_thread = None
-                round_start = None
                 total_rounds += 1
         else:
-            try:
-                round_start = time.time()
-                LOGFILE = datetime.now().strftime('%Y%m%d%H%M%S')
-                
-                round_thread = multiprocessing.Process(target=game_round)
-                round_thread.daemon = True
-                round_thread.start()
-                round_thread.join(timeout=240)
-            except Exception as e:
-                print(f'Error occurred: {e}')
-                traceback.print_exc()
-            finally:
-                #input('Press Enter to continue...')
-                pass
+            if round_start is not None and time.time() - round_start < 300:
+                continue
+            else:
+                try:
+                    round_start = time.time()
+                    LOGFILE = datetime.now().strftime('%Y%m%d%H%M%S')
+                    
+                    round_thread = multiprocessing.Process(target=game_round)
+                    round_thread.daemon = True
+                    round_thread.start()
+                    round_thread.join(timeout=240)
+                except Exception as e:
+                    print(f'Error occurred: {e}')
+                    traceback.print_exc()
+                finally:
+                    #input('Press Enter to continue...')
+                    pass
     pass
 
 
