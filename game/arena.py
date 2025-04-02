@@ -243,6 +243,5 @@ class Arena:
     @property
     def bot_ranking_points(self) -> dict:
         """ returns the bot ranking points """
-        if self.winner:
-            self._bot_points[self.winner] = sum(self._ranking) + 1 + 1
+        self._bot_points[self.winner] = sum(self._ranking) + 1
         return self._bot_points
