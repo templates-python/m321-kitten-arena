@@ -105,7 +105,7 @@ def game_round():
         elif action == 'EXPLODE':
             response = send_request(active_bot['ip'], active_bot['port'], {'action': 'EXPLODE'})
             print(f'  => Bot {active_bot["name"]} exploded')
-            log_game(active_bot['name'], action, '')
+            log_game(active_bot['name'], action, data)
             alive_count -= 1
             inform_bots(active_bot['name'], bot_list, 'EXPLODE', '')
         elif action == 'FUTURE':
@@ -163,9 +163,11 @@ def finish_round(bot_list: List[Bot], arena: Arena) -> None:
     rank = 1
     log_game('Game', 'OVER', '')
     for bot_number in arena.ranking:
-        print(f'{rank}. {bot_list[bot_number]["name"]}')
-        log_game(f'{rank}.', f'{bot_list[bot_number]["name"]}', '')
-        ranking.append(bot_list[bot_number]['name'])
+        bot_name = bot_list[bot_number]['name']
+        bot_points = arena.bot_ranking_points[bot_number]
+        print(f'{rank}. {bot_name} ({bot_points} Punkte)')
+        log_game(f'{rank}.', f'{bot_name}', f'{bot_points} Punkte')
+        ranking.append(bot_name)
         rank += 1
 
     ''' Inform all the bots that the round has ended. '''
