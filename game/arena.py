@@ -19,6 +19,8 @@ class Arena:
         self._active_bot = None
         self._queue = ['PLAY']
         self._state = ''
+        self._exploded_bots_log = {}
+        self._bot_points = {}
 
     def start_round(self, bot_count: int) -> CardCounts:
         """
@@ -94,8 +96,7 @@ class Arena:
                 if Card(CardType.DEFUSE) in self._bots_alive[self._active_bot].hand:
                     self._queue.append('DEFUSE')
                 else:
-                    self._queue.append('EXPLODE')
-                    self._ranking.append(self._active_bot)
+                    self._explode_bot(bot=self._active_bot, reason="The bot was out of DEFUSE cards.", disqualified=False)
             else:
                 self._bots_alive[self._active_bot].hand.append(card)
                 self._queue.append('NEXTBOT')
@@ -107,7 +108,8 @@ class Arena:
         elif self._state == 'EXPLODE':
             self._bots_alive[self._active_bot].alive = False
             self._queue.append('NEXTBOT')
-            return self._active_bot, self._state, None
+            explosion_reason = self._exploded_bots_log[self._active_bot]
+            return self._active_bot, self._state, explosion_reason
         elif self._state == 'FUTURE':
             top_three = []
             for i in range(min(3, self.deck_size)):
@@ -138,7 +140,7 @@ class Arena:
                     self._queue.append('PLAY')
                 return True
             else:
-                self._queue.append('EXPLODE')
+                self._explode_bot(bot=self._active_bot, reason="The card chosen was not in the hand.", disqualified=True)
                 return False
         elif self._state == 'DEFUSE':
             try:
@@ -154,6 +156,22 @@ class Arena:
         elif self._state == 'NEXTBOT':
             return False
         return True
+    
+    def _explode_bot(self, bot: int, reason: str = "No reason given.", disqualified: bool = False) -> None:
+        """
+        Explode the bot.
+        :param bot_name: the name of the bot
+        :param reason: the reason for the explosion
+        :param points: the points of the bot
+        :return: None
+        """
+        self._queue.append('EXPLODE')
+        self._ranking.append(bot)
+        self._exploded_bots_log[bot] = reason
+        if disqualified:
+            self._bot_points[bot] = 0
+        else:
+            self._bot_points[bot] = sum(self._ranking)
 
     def read_hand(self, active_bot: int) -> List[str]:
         """
@@ -221,3 +239,9 @@ class Arena:
         for bot_number in reversed(self._ranking):
             bot_rank.append(bot_number)
         return bot_rank
+    
+    @property
+    def bot_ranking_points(self) -> dict:
+        """ returns the bot ranking points """
+        self._bot_points[self.winner] = sum(self._ranking) + 2 if self.winner else sum(self._ranking) + 1
+        return self._bot_points
